@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Neuroviai Bg Remover</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Inter',system-ui,sans-serif;background:linear-gradient(135deg,#0a0a0f 0%,#1a1a2e 50%,#0a0a0f 100%);color:#e0e0e0;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem}
+    
+    /* Header */
+    .header{text-align:center;margin-bottom:2rem}
+    .logo{display:flex;align-items:center;justify-content:center;gap:.6rem;margin-bottom:.5rem}
+    .logo-icon{width:42px;height:42px;background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 50%,#a855f7 100%);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;box-shadow:0 4px 20px rgba(99,102,241,.3)}
+    h1{font-size:1.8rem;font-weight:700;letter-spacing:-.03em;background:linear-gradient(135deg,#fff 0%,#a5b4fc 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .sub{font-size:.9rem;color:#6b7280;margin-top:.3rem}
+    .badge{display:inline-block;background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);color:#fff;font-size:.65rem;font-weight:600;padding:.25rem .6rem;border-radius:20px;margin-left:.5rem;text-transform:uppercase;letter-spacing:.05em}
+    
+    /* Main Card */
+    .card{background:rgba(26,26,46,.8);backdrop-filter:blur(20px);border:1px solid rgba(99,102,241,.2);border-radius:20px;padding:2rem;width:100%;max-width:600px;box-shadow:0 8px 40px rgba(0,0,0,.4)}
+    
+    /* Drop Zone */
+    .drop-zone{border:2px dashed rgba(99,102,241,.4);border-radius:16px;padding:3rem 1.5rem;cursor:pointer;transition:all .3s ease;background:rgba(99,102,241,.03)}
+    .drop-zone:hover,.drop-zone.dragover{border-color:#6366f1;background:rgba(99,102,241,.08);transform:scale(1.01)}
+    .drop-zone p{font-size:.95rem;color:#9ca3af;pointer-events:none}
+    .drop-zone .icon{font-size:2.5rem;margin-bottom:.8rem;display:block;filter:grayscale(0.3)}
+    .drop-zone u{color:#a5b4fc}
+    input[type=file]{display:none}
+    
+    /* Settings Panel */
+    .settings{margin-top:1.5rem;padding:1.2rem;background:rgba(0,0,0,.2);border-radius:12px;border:1px solid rgba(255,255,255,.05)}
+    .settings-title{font-size:.8rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:1rem}
+    .settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+    .setting-group{display:flex;flex-direction:column;gap:.4rem}
+    .setting-group label{font-size:.8rem;color:#9ca3af;font-weight:500}
+    .setting-group select,.setting-group input[type="color"]{width:100%;padding:.6rem .8rem;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#e0e0e0;font-size:.85rem;cursor:pointer;transition:border-color .2s}
+    .setting-group select:hover,.setting-group select:focus{border-color:#6366f1;outline:none}
+    .setting-group input[type="color"]{height:38px;padding:4px}
+    
+    /* Checkbox */
+    .checkbox-group{display:flex;align-items:center;gap:.6rem;margin-top:.5rem}
+    .checkbox-group input[type="checkbox"]{width:18px;height:18px;accent-color:#6366f1;cursor:pointer}
+    .checkbox-group label{font-size:.85rem;color:#9ca3af;cursor:pointer}
+    
+    /* Preview Area */
+    .preview-area{margin-top:1.5rem;display:flex;gap:1rem;justify-content:center;flex-wrap:wrap}
+    .preview-container{position:relative;flex:1;min-width:200px;max-width:280px}
+    .preview-label{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.7);color:#fff;font-size:.7rem;font-weight:600;padding:.3rem .6rem;border-radius:6px;text-transform:uppercase;letter-spacing:.05em;z-index:1}
+    .preview-area img{width:100%;aspect-ratio:1;border-radius:12px;object-fit:contain;border:1px solid rgba(255,255,255,.1);background:repeating-conic-gradient(#222 0% 25%,#1a1a1a 0% 50%) 0 0/16px 16px}
+    
+    /* Buttons */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;margin-top:1.5rem;padding:.85rem 2rem;background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);color:#fff;border:none;border-radius:10px;font-size:.95rem;font-weight:600;cursor:pointer;transition:all .3s ease;box-shadow:0 4px 20px rgba(99,102,241,.3)}
+    .btn:hover{transform:translateY(-2px);box-shadow:0 6px 25px rgba(99,102,241,.4)}
+    .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+    .btn:active{transform:translateY(0)}
+    .spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:none}
+    .btn.loading .spinner{display:inline-block}
+    .btn.loading .label{display:none}
+    
+    /* Download Section */
+    .download-section{margin-top:1.5rem;padding:1rem;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:12px;display:none}
+    .download-section.show{display:block}
+    .download-info{display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;font-size:.8rem;color:#9ca3af}
+    .download-info span{display:flex;align-items:center;gap:.3rem}
+    .download-buttons{display:flex;gap:.8rem;flex-wrap:wrap}
+    .download-btn{flex:1;min-width:120px;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.7rem 1rem;background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);color:#fff;text-decoration:none;font-size:.85rem;font-weight:600;border-radius:8px;transition:all .2s;border:none;cursor:pointer}
+    .download-btn:hover{transform:translateY(-1px);box-shadow:0 4px 15px rgba(34,197,94,.3)}
+    .download-btn.secondary{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2)}
+    .download-btn.secondary:hover{background:rgba(255,255,255,.15)}
+    
+    /* Status */
+    .status{margin-top:1rem;font-size:.85rem;color:#9ca3af;min-height:1.2em;text-align:center}
+    .status.error{color:#ef4444}
+    .status.success{color:#22c55e}
+    
+    /* Footer */
+    .footer{margin-top:2rem;text-align:center;font-size:.75rem;color:#4b5563}
+    .footer a{color:#6366f1;text-decoration:none}
+    .footer a:hover{text-decoration:underline}
+    
+    /* Animations */
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    .preview-container{animation:fadeIn .3s ease}
+    
+    /* Responsive */
+    @media(max-width:500px){
+      .settings-grid{grid-template-columns:1fr}
+      .preview-container{max-width:100%}
+      .download-buttons{flex-direction:column}
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo">
+      <div class="logo-icon">🧠</div>
+      <h1>Neuroviai<span class="badge">AI</span></h1>
+    </div>
+    <p class="sub">Professional Background Removal • Full Resolution • Instant Download</p>
+  </header>
+
+  <div class="card">
+    <div class="drop-zone" id="dropZone">
+      <span class="icon">📸</span>
+      <p>Drag &amp; drop your image here or <u>click to browse</u></p>
+      <p style="font-size:.75rem;color:#6b7280;margin-top:.5rem">Supports JPG, PNG, WebP • Up to 20MB • 4K+ Resolution</p>
+    </div>
+    <input type="file" id="fileInput" accept="image/*" />
+
+    <!-- Settings Panel -->
+    <div class="settings" id="settingsPanel" style="display:none">
+      <div class="settings-title">⚙️ Processing Options</div>
+      <div class="settings-grid">
+        <div class="setting-group">
+          <label for="modelSelect">AI Model</label>
+          <select id="modelSelect">
+            <option value="isnet-general-use">🎯 Best Quality (General)</option>
+            <option value="u2net">🖼️ High Quality (Objects)</option>
+            <option value="u2net_human_seg">👤 Optimized for Humans</option>
+            <option value="silueta">⚡ Fast Processing</option>
+            <option value="isnet-anime">🎨 Anime/Illustrations</option>
+          </select>
+        </div>
+        <div class="setting-group">
+          <label for="bgColor">Background Color</label>
+          <select id="bgColorSelect">
+            <option value="">🔲 Transparent</option>
+            <option value="#ffffff">⬜ White</option>
+            <option value="#000000">⬛ Black</option>
+            <option value="custom">🎨 Custom Color</option>
+          </select>
+          <input type="color" id="bgColorPicker" value="#ffffff" style="display:none;margin-top:.5rem">
+        </div>
+      </div>
+      <div class="checkbox-group">
+        <input type="checkbox" id="alphaMatting">
+        <label for="alphaMatting">Enhanced edge detection — for hair &amp; fur (slower, may fail on some images)</label>
+      </div>
+    </div>
+
+    <div class="preview-area" id="previewArea"></div>
+
+    <button class="btn" id="processBtn" disabled>
+      <span class="spinner"></span>
+      <span class="label">✨ Remove Background</span>
+    </button>
+
+    <div class="download-section" id="downloadSection">
+      <div class="download-info">
+        <span id="resolutionInfo">📐 Resolution: --</span>
+        <span id="sizeInfo">📦 Size: --</span>
+      </div>
+      <div class="download-buttons" id="downloadWrap"></div>
+    </div>
+
+    <div class="status" id="status"></div>
+  </div>
+
+  <footer class="footer">
+    <p>Powered by <a href="#">Neuroviai</a> • AI-Powered Image Processing</p>
+  </footer>
+
+  <script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const previewArea = document.getElementById('previewArea');
+    const processBtn = document.getElementById('processBtn');
+    const status = document.getElementById('status');
+    const downloadSection = document.getElementById('downloadSection');
+    const downloadWrap = document.getElementById('downloadWrap');
+    const settingsPanel = document.getElementById('settingsPanel');
+    const modelSelect = document.getElementById('modelSelect');
+    const bgColorSelect = document.getElementById('bgColorSelect');
+    const bgColorPicker = document.getElementById('bgColorPicker');
+    const alphaMatting = document.getElementById('alphaMatting');
+    const resolutionInfo = document.getElementById('resolutionInfo');
+    const sizeInfo = document.getElementById('sizeInfo');
+    
+    let selectedFile = null;
+    let resultBlob = null;
+
+    // Background color handling
+    bgColorSelect.addEventListener('change', () => {
+      bgColorPicker.style.display = bgColorSelect.value === 'custom' ? 'block' : 'none';
+    });
+
+    // Drag & Drop
+    dropZone.addEventListener('click', () => fileInput.click());
+    ['dragenter', 'dragover'].forEach(e => {
+      dropZone.addEventListener(e, ev => {
+        ev.preventDefault();
+        dropZone.classList.add('dragover');
+      });
+    });
+    ['dragleave', 'drop'].forEach(e => {
+      dropZone.addEventListener(e, ev => {
+        ev.preventDefault();
+        dropZone.classList.remove('dragover');
+      });
+    });
+    dropZone.addEventListener('drop', ev => {
+      if (ev.dataTransfer.files.length) handleFile(ev.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length) handleFile(fileInput.files[0]);
+    });
+
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function handleFile(file) {
+      if (!file.type.startsWith('image/')) {
+        status.textContent = '⚠️ Please select a valid image file.';
+        status.className = 'status error';
+        return;
+      }
+      if (file.size > 20 * 1024 * 1024) {
+        status.textContent = '⚠️ File too large. Maximum size is 20MB.';
+        status.className = 'status error';
+        return;
+      }
+      
+      selectedFile = file;
+      resultBlob = null;
+      previewArea.innerHTML = '';
+      downloadSection.classList.remove('show');
+      downloadWrap.innerHTML = '';
+      status.textContent = '';
+      status.className = 'status';
+      settingsPanel.style.display = 'block';
+
+      // Create preview
+      const container = document.createElement('div');
+      container.className = 'preview-container';
+      const label = document.createElement('div');
+      label.className = 'preview-label';
+      label.textContent = 'Original';
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      img.title = 'Original Image';
+      
+      // Get image dimensions
+      img.onload = () => {
+        resolutionInfo.textContent = `📐 ${img.naturalWidth} × ${img.naturalHeight}`;
+      };
+      
+      container.appendChild(label);
+      container.appendChild(img);
+      previewArea.appendChild(container);
+      
+      sizeInfo.textContent = `📦 ${formatBytes(file.size)}`;
+      processBtn.disabled = false;
+    }
+
+    // Process Image
+    processBtn.addEventListener('click', async () => {
+      if (!selectedFile) return;
+      
+      processBtn.disabled = true;
+      processBtn.classList.add('loading');
+      status.textContent = '🔄 Processing with AI... This may take a moment for high-resolution images.';
+      status.className = 'status';
+      downloadSection.classList.remove('show');
+      downloadWrap.innerHTML = '';
+
+      const form = new FormData();
+      form.append('file', selectedFile);
+      form.append('model', modelSelect.value);
+      form.append('alpha_matting', alphaMatting.checked);
+      
+      // Handle background color
+      let bgColor = bgColorSelect.value;
+      if (bgColor === 'custom') {
+        bgColor = bgColorPicker.value;
+      }
+      if (bgColor) {
+        form.append('bg_color', bgColor);
+      }
+
+      try {
+        const res = await fetch('/remove-bg', { method: 'POST', body: form });
+        if (!res.ok) throw new Error(`Server error ${res.status}`);
+        
+        const blob = await res.blob();
+        resultBlob = blob;
+        const url = URL.createObjectURL(blob);
+
+        // Get size info from headers
+        const originalSize = res.headers.get('X-Original-Size');
+        const outputSize = res.headers.get('X-Output-Size');
+        const resolution = res.headers.get('X-Resolution');
+
+        // Show result preview
+        const container = document.createElement('div');
+        container.className = 'preview-container';
+        const label = document.createElement('div');
+        label.className = 'preview-label';
+        label.textContent = 'Result';
+        label.style.background = 'linear-gradient(135deg,#22c55e 0%,#16a34a 100%)';
+        const img = document.createElement('img');
+        img.src = url;
+        img.title = 'Background Removed';
+        container.appendChild(label);
+        container.appendChild(img);
+        
+        // Remove old result if exists
+        if (previewArea.children.length > 1) {
+          previewArea.removeChild(previewArea.lastChild);
+        }
+        previewArea.appendChild(container);
+
+        // Update info
+        if (resolution) {
+          resolutionInfo.textContent = `📐 ${resolution}`;
+        }
+        if (outputSize) {
+          const saved = originalSize ? ((1 - outputSize / originalSize) * 100).toFixed(1) : 0;
+          sizeInfo.textContent = `📦 ${formatBytes(parseInt(outputSize))} (${saved}% smaller)`;
+        }
+
+        // Create download buttons
+        const pngBtn = document.createElement('a');
+        pngBtn.href = url;
+        pngBtn.download = 'neuroviai-nobg.png';
+        pngBtn.className = 'download-btn';
+        pngBtn.innerHTML = '⬇️ Download PNG';
+        downloadWrap.appendChild(pngBtn);
+
+        downloadSection.classList.add('show');
+        status.textContent = '✅ Background removed successfully!';
+        status.className = 'status success';
+        
+      } catch (err) {
+        status.textContent = '❌ Error: ' + err.message;
+        status.className = 'status error';
+      } finally {
+        processBtn.disabled = false;
+        processBtn.classList.remove('loading');
+      }
+    });
+  </script>
+</body>
+</html>
